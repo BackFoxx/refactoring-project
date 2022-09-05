@@ -1,9 +1,12 @@
-<mxfile host="app.diagrams.net" modified="2022-09-05T04:50:16.759Z" agent="5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36" etag="dMOroPsSuA3tKpce2ZfF" version="20.2.8" type="github">
+<mxfile host="app.diagrams.net" modified="2022-09-05T05:10:09.591Z" agent="5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36" etag="WwItrLu1yrktO1UISToi" version="20.2.8" type="github">
   <diagram id="OBB000rxiE3-gPW8BQ-Y" name="페이지-1">
-    <mxGraphModel dx="1038" dy="547" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="865" dy="456" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
+        <mxCell id="gdsI4690DeXEd4IL5GdT-67" style="edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=none;endFill=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="gdsI4690DeXEd4IL5GdT-1" target="gdsI4690DeXEd4IL5GdT-66">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
         <mxCell id="gdsI4690DeXEd4IL5GdT-1" value="회원" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="240" y="210" width="80" height="40" as="geometry" />
         </mxCell>
@@ -80,6 +83,9 @@
         </mxCell>
         <mxCell id="gdsI4690DeXEd4IL5GdT-28" value="즐겨찾기" style="ellipse;shape=doubleEllipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="120" y="390" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="gdsI4690DeXEd4IL5GdT-74" style="edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;endArrow=none;endFill=0;startArrow=none;" edge="1" parent="1" source="gdsI4690DeXEd4IL5GdT-79" target="gdsI4690DeXEd4IL5GdT-72">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="gdsI4690DeXEd4IL5GdT-31" value="리팩토링 대상 코드" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="550" y="210" width="140" height="40" as="geometry" />
@@ -182,6 +188,62 @@
         </mxCell>
         <mxCell id="gdsI4690DeXEd4IL5GdT-60" value="수정일" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="630" y="480" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="gdsI4690DeXEd4IL5GdT-66" value="작성" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="400" y="210" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="gdsI4690DeXEd4IL5GdT-70" style="edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;endArrow=none;endFill=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" edge="1" parent="1" source="gdsI4690DeXEd4IL5GdT-69" target="gdsI4690DeXEd4IL5GdT-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gdsI4690DeXEd4IL5GdT-69" value="작성" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="320" y="310" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="gdsI4690DeXEd4IL5GdT-72" value="리팩토링" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="540" y="310" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="gdsI4690DeXEd4IL5GdT-75" value="1" style="text;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="1">
+          <mxGeometry x="340" y="280" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="gdsI4690DeXEd4IL5GdT-76" value="n" style="text;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="1">
+          <mxGeometry x="330" y="350" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="gdsI4690DeXEd4IL5GdT-77" value="1" style="text;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="1">
+          <mxGeometry x="370" y="195" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="gdsI4690DeXEd4IL5GdT-78" value="n" style="text;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="1">
+          <mxGeometry x="460" y="200" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="gdsI4690DeXEd4IL5GdT-79" value="1" style="text;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="1">
+          <mxGeometry x="540" y="280" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="gdsI4690DeXEd4IL5GdT-80" value="" style="edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;" edge="1" parent="1" source="gdsI4690DeXEd4IL5GdT-31">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="610" y="250" as="sourcePoint" />
+            <mxPoint x="580" y="310" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gdsI4690DeXEd4IL5GdT-81" value="n" style="text;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="1">
+          <mxGeometry x="570" y="345" width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="gdsI4690DeXEd4IL5GdT-82" value="" style="shape=link;html=1;rounded=0;endArrow=none;endFill=0;exitX=0.361;exitY=1.078;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gdsI4690DeXEd4IL5GdT-78" target="gdsI4690DeXEd4IL5GdT-31">
+          <mxGeometry width="100" relative="1" as="geometry">
+            <mxPoint x="480" y="280" as="sourcePoint" />
+            <mxPoint x="580" y="280" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gdsI4690DeXEd4IL5GdT-83" value="" style="shape=link;html=1;rounded=0;endArrow=none;endFill=0;exitX=1;exitY=0;exitDx=0;exitDy=0;" edge="1" parent="1" source="gdsI4690DeXEd4IL5GdT-52">
+          <mxGeometry width="100" relative="1" as="geometry">
+            <mxPoint x="491.6600000000001" y="242.33999999999992" as="sourcePoint" />
+            <mxPoint x="580" y="350" as="targetPoint" />
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gdsI4690DeXEd4IL5GdT-84" value="" style="shape=link;html=1;rounded=0;endArrow=none;endFill=0;exitX=1;exitY=0;exitDx=0;exitDy=0;entryX=0.528;entryY=-0.033;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" target="gdsI4690DeXEd4IL5GdT-76">
+          <mxGeometry width="100" relative="1" as="geometry">
+            <mxPoint x="400" y="410.0000000000001" as="sourcePoint" />
+            <mxPoint x="440" y="350" as="targetPoint" />
+            <Array as="points" />
+          </mxGeometry>
         </mxCell>
       </root>
     </mxGraphModel>
