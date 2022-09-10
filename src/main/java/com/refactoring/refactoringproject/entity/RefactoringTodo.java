@@ -33,7 +33,7 @@ public class RefactoringTodo extends BaseEntityTime {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "MEMBER_ID", nullable = false)
     private Member member;
 
@@ -46,7 +46,7 @@ public class RefactoringTodo extends BaseEntityTime {
     @Column(length = 1000)
     private String description;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "BEST_PRACTICE")
     private RefactoringDone bestPractice;
 
