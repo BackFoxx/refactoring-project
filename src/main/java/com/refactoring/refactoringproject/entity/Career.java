@@ -1,15 +1,29 @@
 package com.refactoring.refactoringproject.entity;
 
+import lombok.Getter;
+
 import javax.persistence.*;
 
 @Entity
+@Getter
 @Table(name = "CAREER")
 public class Career extends BaseEntityTime {
+    public Career() {
+    }
+
+    public Career(Long id, Member member, String company, int months) {
+        this.id = id;
+        this.member = member;
+        this.company = company;
+        this.months = months;
+    }
+
     @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "ID")
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "MEMBER_ID", nullable = false)
     private Member member;
 
@@ -18,4 +32,12 @@ public class Career extends BaseEntityTime {
 
     @Column(name = "MONTHS", nullable = false)
     private int months;
+
+    public void assignMember(Member member) {
+        if (this.member != null) {
+            throw new IllegalArgumentException("You can't change Member of Career which is already assigned.");
+        }
+
+        this.member = member;
+    }
 }
