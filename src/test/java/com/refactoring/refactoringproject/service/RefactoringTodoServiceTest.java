@@ -10,6 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
@@ -130,18 +131,56 @@ class RefactoringTodoServiceTest {
 
         // when & then
         assertThatThrownBy(() -> refactoringTodoService.findOneById(savedId))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(EmptyResultDataAccessException.class)
                 .hasMessage("there is no RefactoringTodo with id -1");
     }
 
     @Test
-    @DisplayName("리팩토링 대상 코드 - 존재하지 않는 게시글 id로 리팩토링 대상 코드를 조회하려 시도하면 예외를 반환한다.")
+    @DisplayName("리팩토링 대상 코드 - null id로 리팩토링 대상 코드를 조회하려 시도하면 예외를 반환한다.")
     void givenNullId_whenFindOneByGivenId_ThenThrowsException() {
         // given
         Long savedId = null;
 
         // when & then
         assertThatThrownBy(() -> refactoringTodoService.findOneById(savedId))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("you tried to find a RefactoringTodo with NULL id");
+    }
+
+    @Test
+    @DisplayName("리팩토링 대상 코드 - 게시글 id가 주어지면 id에 해당하는 리팩토링 대상 코드 한 건을 삭제한다.")
+    void givenRefactoringTodoId_whenDeleteOneByGivenId_ThenSuccess() {
+        // given
+        Long savedId = this.saveRefactoringTodo();
+
+        // when
+        refactoringTodoService.deleteOneById(savedId);
+
+        // then
+        assertThatThrownBy(() -> refactoringTodoService.findOneById(savedId))
+                .isInstanceOf(EmptyResultDataAccessException.class)
+                .hasMessage("there is no RefactoringTodo with id " + savedId);
+    }
+
+    @Test
+    @DisplayName("리팩토링 대상 코드 - 존재하지 않는 게시글 id로 리팩토링 대상 코드를 삭제 시도하면 예외를 반환한다.")
+    void givenNonExistingRefactoringTodoId_whenDeleteOneByGivenId_ThenThrowsException() {
+        // given
+        Long savedId = -1L;
+
+        // when & then
+        assertThatThrownBy(() -> refactoringTodoService.deleteOneById(savedId))
+                .isInstanceOf(EmptyResultDataAccessException.class);
+    }
+
+    @Test
+    @DisplayName("리팩토링 대상 코드 - null id로 리팩토링 대상 코드를 삭제 시도하면 예외를 반환한다.")
+    void givenNullId_whenDeleteOneByGivenId_ThenThrowsException() {
+        // given
+        Long savedId = null;
+
+        // when & then
+        assertThatThrownBy(() -> refactoringTodoService.deleteOneById(savedId))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("you tried to find a RefactoringTodo with NULL id");
     }
