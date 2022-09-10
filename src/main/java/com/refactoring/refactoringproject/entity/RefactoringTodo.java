@@ -1,9 +1,34 @@
 package com.refactoring.refactoringproject.entity;
 
+import lombok.Getter;
+
 import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
+@Getter
 public class RefactoringTodo extends BaseEntityTime {
+    public RefactoringTodo() {
+    }
+
+    public RefactoringTodo(Member member, String language, String code, String description) {
+        this.member = member;
+        this.language = language;
+        this.code = code;
+        this.description = description;
+    }
+
+    public RefactoringTodo(Long id, Member member, String language, String code, String description, RefactoringDone bestPractice, List<RefactoringTodoOrder> orders) {
+        this.id = id;
+        this.member = member;
+        this.language = language;
+        this.code = code;
+        this.description = description;
+        this.bestPractice = bestPractice;
+        this.orders = orders;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
@@ -24,4 +49,12 @@ public class RefactoringTodo extends BaseEntityTime {
     @OneToOne
     @JoinColumn(name = "BEST_PRACTICE")
     private RefactoringDone bestPractice;
+
+    @OneToMany(mappedBy = "refactoringTodo", cascade = CascadeType.PERSIST)
+    private List<RefactoringTodoOrder> orders = new ArrayList<>();
+
+    public void addRefactoringOrder(RefactoringTodoOrder order) {
+        this.orders.add(order);
+        order.assignRefactoringTodo(this);
+    }
 }
