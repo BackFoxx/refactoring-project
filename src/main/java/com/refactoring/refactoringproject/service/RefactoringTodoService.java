@@ -8,6 +8,7 @@ import com.refactoring.refactoringproject.repository.RefactoringTodoRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -32,8 +33,17 @@ public class RefactoringTodoService {
         }
 
         Optional<RefactoringTodo> resultOptional = refactoringTodoRepository.findById(savedId);
-        RefactoringTodo findRefactoringTodo = resultOptional.orElseThrow(() -> new IllegalArgumentException("there is no RefactoringTodo with id " + savedId));
-
+        RefactoringTodo findRefactoringTodo = resultOptional.orElseThrow(() -> new EmptyResultDataAccessException("there is no RefactoringTodo with id " + savedId, 1));
         return RefactoringTodoResponse.from(findRefactoringTodo);
+    }
+
+    public void deleteOneById(Long savedId) {
+        if (savedId == null) {
+            throw new IllegalArgumentException("you tried to find a RefactoringTodo with NULL id");
+        }
+
+        refactoringTodoRepository.deleteById(savedId);
+
+        log.info("Deleting RefactoringTodo Completed. Article ID: {}", savedId);
     }
 }
