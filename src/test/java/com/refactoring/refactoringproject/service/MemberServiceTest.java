@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -128,6 +129,36 @@ class MemberServiceTest {
         assertThat(favorites).hasSize(1);
         assertThat(favorites.get(0).getRefactoringTodo().getId())
                 .isEqualTo(savedRefactoringTodoId);
+    }
+
+    @Test
+    @DisplayName("자신이 작성한 리팩토링 대상 코드 게시글을 즐겨찾기 등록할 수 없다.")
+    void givenMemberAndOneRefactoringTodoOfHimself_whenRequestingFavorite_thenThrowsException() {
+        // given
+        Member member = this.signInMemberWithIdCondition("test@gmail.com");
+        Member member2 = this.signInMemberWithIdCondition("test2@gmail.com"); // 다른 사용자
+
+        Long savedRefactoringTodoId = this.saveRefactoringTodoWithMemberCondition(member2);
+
+        memberService.assignFavorite(savedRefactoringTodoId, member);
+
+        // when & then
+        assertThatThrownBy(() -> memberService.assignFavorite(savedRefactoringTodoId, member))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("member can't assign RefactoringTodo which is already assigned. RefactoringTodo Id: " + savedRefactoringTodoId);
+    }
+
+    @Test
+    @DisplayName("자신이 작성한 리팩토링 대상 코드 게시글을 즐겨찾기 등록할 수 없다.")
+    void givenMemberAndOneRefactoringTodoAlreadyAssigned_whenRequestingFavorite_thenThrowsException() {
+        // given
+        Member member = this.signInMemberWithIdCondition("test@gmail.com");
+        Long savedRefactoringTodoId = this.saveRefactoringTodoWithMemberCondition(member);
+
+        // when & then
+        assertThatThrownBy(() -> memberService.assignFavorite(savedRefactoringTodoId, member))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("member can't assign RefactoringTodo of himself to favorite. RefactoringTodo Id: " + savedRefactoringTodoId);
     }
 
     private Long saveRefactoringTodoWithMemberCondition(Member member) {

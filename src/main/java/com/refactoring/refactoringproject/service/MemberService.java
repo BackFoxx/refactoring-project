@@ -33,8 +33,16 @@ public class MemberService {
     }
 
     public void assignFavorite(Long refactoringTodoId, Member member) { //TODO: 스프링 시큐리티 도입 이후에는 파라미터로 꺼낼 필요가 없다.
+        if (favoriteRepository.findByMemberIdAndRefactoringTodoId(member.getId(), refactoringTodoId).isPresent()) {
+            throw new IllegalArgumentException("member can't assign RefactoringTodo which is already assigned. RefactoringTodo Id: " + refactoringTodoId);
+        }
+
         RefactoringTodo refactoringTodo = refactoringTodoRepository.findById(refactoringTodoId)
                 .orElseThrow(() -> new EmptyResultDataAccessException("there is no RefactoringTodo with id " + refactoringTodoId, 1));
+
+        if (refactoringTodo.getMember().getId().equals(member.getId())) {
+            throw new IllegalArgumentException("member can't assign RefactoringTodo of himself to favorite. RefactoringTodo Id: " + refactoringTodoId);
+        }
 
         Favorite favorite = Favorite.of(member, refactoringTodo);
         favoriteRepository.save(favorite);
