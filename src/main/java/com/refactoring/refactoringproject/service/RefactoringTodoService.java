@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -45,5 +47,10 @@ public class RefactoringTodoService {
         refactoringTodoRepository.deleteById(savedId);
 
         log.info("Deleting RefactoringTodo Completed. Article ID: {}", savedId);
+    }
+
+    public Page<RefactoringTodoResponse> findList(Pageable pageable) {
+        Page<RefactoringTodo> findList = refactoringTodoRepository.findAll(pageable);
+        return findList.map(refactoringTodo -> RefactoringTodoResponse.from(refactoringTodo));
     }
 }
