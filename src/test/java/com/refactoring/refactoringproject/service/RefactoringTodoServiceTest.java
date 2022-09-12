@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.test.annotation.Commit;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
@@ -196,7 +197,7 @@ class RefactoringTodoServiceTest {
         // given
         Member member = this.signInMember();
         for (int i = 0; i < 100; i++) {
-            saveRefactoringTodoWithMemberCondition(member, i);
+            saveRefactoringTodoWithMemberCondition(member);
         }
         Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
         /*
@@ -222,18 +223,31 @@ class RefactoringTodoServiceTest {
     }
 
     @Test
-    @Disabled("즐겨찾기 등록 비즈니스 로직이 아직 구현되지 않았기 때문에 실행할 수 없는 테스트입니다.")
     @DisplayName("리팩토링 대상 코드 - 즐겨찾기 수가 많은 순서대로 내림차순 정렬 옵션을 주면 리팩토링 대상 코드 10개를 해당 옵션에 맞게 정렬하여 조회한다.")
     void givenSortingOptionWithNumberOfFavorites_whenFindRefactoringTodoList_thenReturnsListWithGivenConditions() {
         // given
         Member member = this.signInMember();
-        for (int i = 0; i < 100; i++) {
-            saveRefactoringTodoWithMemberCondition(member, i);
+
+        for (int i = 0; i < 50; i++) {
+            this.signInMemberWithEmailCondition("test" + i + "@gmail.com");
         }
-        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        for (int i = 0; i < 50; i++) {
+            Long savedRefactoringTodo = saveRefactoringTodoWithMemberCondition(member);
+
+            int random = (int) (Math.random() * 50) + 1;
+            for (int j = 0; j < random; j++) {
+                Member follower = memberRepository.findById("test" + j + "@gmail.com").get();
+                memberService.assignFavorite(savedRefactoringTodo, follower);
+            }
+            /*
+            * 1~50 명 사이의 회원이 해당 리팩토링 대상 코드를 즐겨찾기 한다.
+            * */
+        }
+
+        Pageable pageable = PageRequest.of(0, 10, Sort.Direction.DESC, "favoriteCount");
         /*
-        * 컨트롤러에서 @PageableDefault(size = 10, sort = “createdAt”, direction = Sort.Direction.DESC) Pageable pageable)
-        * 옵션의 PageRequest가 들어올 예정이다.
+        * 컨트롤러에서 즐겨찾기 순 / 내림차순 옵션의 PageRequest가 들어올 예정이다.
         * */
 
         // when
@@ -241,16 +255,15 @@ class RefactoringTodoServiceTest {
 
         // then
         assertThat(resultList).hasSize(10);
+    }
 
-        List<RefactoringTodoResponse> resultContentList = resultList.getContent();
-        for (int i = 0; i < 9; i++) {
-            assertThat(resultContentList.get(i).getCreatedAt())
-                    .isAfter(resultContentList.get(i + 1).getCreatedAt());
-        }
+    @Test
+    @DisplayName("테스트")
+    void test() {
+        this.saveMemberAndSaveRefactoringTodo();
 
-        for (RefactoringTodoResponse refactoringTodoResponse : resultContentList) {
-            System.out.println("refactoringTodoResponse = " + refactoringTodoResponse);
-        }
+        RefactoringTodo refactoringTodo = refactoringTodoRepository.testQuery();
+        assertThat(refactoringTodo).isNotNull();
     }
 
     /*
@@ -289,7 +302,7 @@ class RefactoringTodoServiceTest {
         return savedId;
     }
 
-    private Long saveRefactoringTodoWithMemberCondition(Member member, int count) {
+    private Long saveRefactoringTodoWithMemberCondition(Member member) {
         String language = "JAVA";
         String code = "    private String signInMember() {\n" +
                 "        String email = \"test@gmail.com\";\n" +
@@ -321,6 +334,21 @@ class RefactoringTodoServiceTest {
 
     private Member signInMember() {
         String id = "test@gmail.com";
+        String password = "testpassword1234";
+        String level = "주니어";
+
+        CareerFormat career1 = new CareerFormat("삼성전자 응가부서", 30);
+        CareerFormat career2 = new CareerFormat("네이버 핵폭탄부서", 4);
+
+        MemberSignInFormat signInFormat = MemberSignInFormat.of(id, password, level, List.of(career1, career2));
+
+        memberService.signIn(signInFormat);
+
+        return memberRepository.findById(id).get();
+    }
+
+    private Member signInMemberWithEmailCondition(String email) {
+        String id = email;
         String password = "testpassword1234";
         String level = "주니어";
 

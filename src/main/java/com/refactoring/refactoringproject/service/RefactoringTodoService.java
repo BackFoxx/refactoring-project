@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -50,6 +51,12 @@ public class RefactoringTodoService {
     }
 
     public Page<RefactoringTodoResponse> findList(Pageable pageable) {
+        Sort sort = pageable.getSort();
+        for (Sort.Order order : sort) {
+            if (order.getProperty().equals("favoriteCount")) {
+                return refactoringTodoRepository.findListWithFavoriteCount(pageable);
+            }
+        }
         Page<RefactoringTodo> findList = refactoringTodoRepository.findAll(pageable);
         return findList.map(refactoringTodo -> RefactoringTodoResponse.from(refactoringTodo));
     }
