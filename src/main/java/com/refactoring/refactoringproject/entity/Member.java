@@ -39,8 +39,19 @@ public class Member extends BaseEntityTime {
     @OneToMany(mappedBy = "member", cascade = CascadeType.MERGE)
     private List<Career> careers = new ArrayList<>();
 
+    @OneToMany(mappedBy = "member")
+    private List<Favorite> favorites = new ArrayList<>();
+
     public void addCareer(Career career) {
         this.careers.add(career);
         career.assignMember(this);
+    }
+
+    public void addFavorite(Favorite favorite) {
+        if (favorite.getMember() != this) {
+            throw new IllegalArgumentException("you can't assign favorite having another value of another member, Favorite id: " + favorite.getId());
+        }
+
+        this.favorites.add(favorite);
     }
 }
