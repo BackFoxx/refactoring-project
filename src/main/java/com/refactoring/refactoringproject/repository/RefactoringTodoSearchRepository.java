@@ -7,6 +7,4 @@ import org.springframework.data.domain.Pageable;
 
 public interface RefactoringTodoSearchRepository {
     Page<RefactoringTodoResponse> findListWithFavoriteCount(Pageable pageable);
-
-    RefactoringTodo testQuery();
 }

@@ -51,13 +51,6 @@ public class RefactoringTodoService {
     }
 
     public Page<RefactoringTodoResponse> findList(Pageable pageable) {
-        Sort sort = pageable.getSort();
-        for (Sort.Order order : sort) {
-            if (order.getProperty().equals("favoriteCount")) {
-                return refactoringTodoRepository.findListWithFavoriteCount(pageable);
-            }
-        }
-        Page<RefactoringTodo> findList = refactoringTodoRepository.findAll(pageable);
-        return findList.map(refactoringTodo -> RefactoringTodoResponse.from(refactoringTodo));
+        return refactoringTodoRepository.findListWithFavoriteCount(pageable);
     }
 }

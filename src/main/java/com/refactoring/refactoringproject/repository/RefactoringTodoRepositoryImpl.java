@@ -43,13 +43,12 @@ public class RefactoringTodoRepositoryImpl implements RefactoringTodoSearchRepos
                         refactoringTodo.createdAt,
                         refactoringTodo.modifiedAt
                 ))
-                .from(refactoringTodo)
-                .innerJoin(refactoringTodo.favorites, favorite);
+                .from(refactoringTodo);
 
         for (Sort.Order order : pageable.getSort()) {
             query.orderBy(
                     new OrderSpecifier<>(
-                            order.isAscending() ? Order.ASC : Order.DESC, Expressions.stringPath("favoriteCount")
+                            order.isAscending() ? Order.ASC : Order.DESC, Expressions.stringPath(order.getProperty())
                     )
             );
         }
@@ -58,7 +57,6 @@ public class RefactoringTodoRepositoryImpl implements RefactoringTodoSearchRepos
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize());
 
-
         return new PageImpl<>(query.fetch());
     }
 
@@ -66,13 +64,7 @@ public class RefactoringTodoRepositoryImpl implements RefactoringTodoSearchRepos
         JPQLQuery<Long> countFavorites = JPAExpressions
                 .select(favorite.count())
                 .from(favorite)
-                .where(favorite.refactoringTodo.id.eq(refactoringTodo.id))
-                .groupBy(favorite.refactoringTodo);
+                .where(favorite.refactoringTodo.id.eq(refactoringTodo.id));
         return countFavorites;
-    }
-
-    @Override
-    public RefactoringTodo testQuery() {
-        return queryFactory.selectFrom(refactoringTodo).fetchFirst();
     }
 }

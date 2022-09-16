@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
@@ -211,20 +212,51 @@ class RefactoringTodoServiceTest {
         // then
         assertThat(resultList).hasSize(10);
 
-        List<RefactoringTodoResponse> resultContentList = resultList.getContent();
-        for (int i = 0; i < 9; i++) {
-            assertThat(resultContentList.get(i).getCreatedAt())
-                    .isAfter(resultContentList.get(i + 1).getCreatedAt());
+        Iterator<RefactoringTodoResponse> iterator = resultList.iterator();
+        RefactoringTodoResponse next = null;
+        while (iterator.hasNext()) {
+            if (next == null) next = iterator.next();
+            RefactoringTodoResponse next2 = iterator.next();
+            assertThat(next.getCreatedAt())
+                    .isAfter(next2.getCreatedAt());
+            next = next2;
         }
+    }
 
-        for (RefactoringTodoResponse refactoringTodoResponse : resultContentList) {
-            System.out.println("refactoringTodoResponse = " + refactoringTodoResponse);
+    @Test
+    @DisplayName("리팩토링 대상 코드 - 최근에 작성한 작성일 순서대로 오름차순 정렬 옵션을 주면 리팩토링 대상 코드 10개를 해당 옵션에 맞게 정렬하여 조회한다.")
+    void givenSortingOptionWithCreatedDateASC_whenFindRefactoringTodoList_thenReturnsListWithGivenConditions() {
+        // given
+        Member member = this.signInMember();
+        for (int i = 0; i < 100; i++) {
+            saveRefactoringTodoWithMemberCondition(member);
+        }
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "createdAt"));
+        /*
+        * 컨트롤러에서 @PageableDefault(size = 10, sort = “createdAt”, direction = Sort.Direction.DESC) Pageable pageable)
+        * 옵션의 PageRequest가 들어올 예정이다.
+        * */
+
+        // when
+        Page<RefactoringTodoResponse> resultList = refactoringTodoService.findList(pageable);
+
+        // then
+        assertThat(resultList).hasSize(10);
+
+        Iterator<RefactoringTodoResponse> iterator = resultList.iterator();
+        RefactoringTodoResponse next = null;
+        while (iterator.hasNext()) {
+            if (next == null) next = iterator.next();
+            RefactoringTodoResponse next2 = iterator.next();
+            assertThat(next.getCreatedAt())
+                    .isBefore(next2.getCreatedAt());
+            next = next2;
         }
     }
 
     @Test
     @DisplayName("리팩토링 대상 코드 - 즐겨찾기 수가 많은 순서대로 내림차순 정렬 옵션을 주면 리팩토링 대상 코드 10개를 해당 옵션에 맞게 정렬하여 조회한다.")
-    void givenSortingOptionWithNumberOfFavorites_whenFindRefactoringTodoList_thenReturnsListWithGivenConditions() {
+    void givenSortingOptionWithNumberOfFavoritesDESC_whenFindRefactoringTodoList_thenReturnsListWithGivenConditions() {
         // given
         Member member = this.signInMember();
 
@@ -232,7 +264,7 @@ class RefactoringTodoServiceTest {
             this.signInMemberWithEmailCondition("test" + i + "@gmail.com");
         }
 
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < 30; i++) {
             Long savedRefactoringTodo = saveRefactoringTodoWithMemberCondition(member);
 
             int random = (int) (Math.random() * 50) + 1;
@@ -255,15 +287,62 @@ class RefactoringTodoServiceTest {
 
         // then
         assertThat(resultList).hasSize(10);
+        Iterator<RefactoringTodoResponse> iterator = resultList.iterator();
+
+        RefactoringTodoResponse next = null;
+        while (iterator.hasNext()) {
+            if (next == null) next = iterator.next();
+            RefactoringTodoResponse next2 = iterator.next();
+            assertThat(next.getFavoriteCount())
+                    .isGreaterThanOrEqualTo(next2.getFavoriteCount());
+            next = next2;
+        }
     }
 
     @Test
-    @DisplayName("테스트")
-    void test() {
-        this.saveMemberAndSaveRefactoringTodo();
+    @DisplayName("리팩토링 대상 코드 - 즐겨찾기 수가 많은 순서대로 오름차순 정렬 옵션을 주면 리팩토링 대상 코드 10개를 해당 옵션에 맞게 정렬하여 조회한다.")
+    void givenSortingOptionWithNumberOfFavoritesASC_whenFindRefactoringTodoList_thenReturnsListWithGivenConditions() {
+        // given
+        Member member = this.signInMember();
 
-        RefactoringTodo refactoringTodo = refactoringTodoRepository.testQuery();
-        assertThat(refactoringTodo).isNotNull();
+        for (int i = 0; i < 50; i++) {
+            this.signInMemberWithEmailCondition("test" + i + "@gmail.com");
+        }
+
+        for (int i = 0; i < 30; i++) {
+            Long savedRefactoringTodo = saveRefactoringTodoWithMemberCondition(member);
+
+            int random = (int) (Math.random() * 50) + 1;
+            for (int j = 0; j < random; j++) {
+                Member follower = memberRepository.findById("test" + j + "@gmail.com").get();
+                memberService.assignFavorite(savedRefactoringTodo, follower);
+            }
+            /*
+            * 1~50 명 사이의 회원이 해당 리팩토링 대상 코드를 즐겨찾기 한다.
+            * */
+        }
+
+        Pageable pageable = PageRequest.of(0, 10, Sort.Direction.ASC, "favoriteCount");
+        /*
+        * 컨트롤러에서 즐겨찾기 순 / 내림차순 옵션의 PageRequest가 들어올 예정이다.
+        * */
+
+        // when
+        Page<RefactoringTodoResponse> resultList = refactoringTodoService.findList(pageable);
+
+        // then
+        assertThat(resultList).hasSize(10);
+        Iterator<RefactoringTodoResponse> iterator = resultList.iterator();
+
+        RefactoringTodoResponse next = null;
+        while (iterator.hasNext()) {
+            if (next == null) next = iterator.next();
+            System.out.println("next = " + next);
+            RefactoringTodoResponse next2 = iterator.next();
+            assertThat(next.getFavoriteCount())
+                    .isLessThanOrEqualTo(next2.getFavoriteCount());
+            next = next2;
+        }
     }
 
     /*
