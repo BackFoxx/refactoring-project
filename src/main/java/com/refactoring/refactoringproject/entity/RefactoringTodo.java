@@ -53,6 +53,9 @@ public class RefactoringTodo extends BaseEntityTime {
     @OneToMany(mappedBy = "refactoringTodo", cascade = CascadeType.PERSIST)
     private List<RefactoringTodoOrder> orders = new ArrayList<>();
 
+    @OneToMany(mappedBy = "refactoringTodo")
+    private List<Favorite> favorites = new ArrayList<>();
+
     public void addRefactoringOrder(RefactoringTodoOrder order) {
         this.orders.add(order);
         order.assignRefactoringTodo(this);

@@ -149,7 +149,7 @@ class MemberServiceTest {
     }
 
     @Test
-    @DisplayName("자신이 작성한 리팩토링 대상 코드 게시글을 즐겨찾기 등록할 수 없다.")
+    @DisplayName("이미 즐겨찾기 등록한 리팩토링 대상 코드 게시글을 중복으로 즐겨찾기 등록할 수 없다.")
     void givenMemberAndOneRefactoringTodoAlreadyAssigned_whenRequestingFavorite_thenThrowsException() {
         // given
         Member member = this.signInMemberWithIdCondition("test@gmail.com");
