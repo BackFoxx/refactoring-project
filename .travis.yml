@@ -40,12 +40,12 @@ deploy:
     secret_access_key: $AWS_SECRET_KEY
 
     bucket: refactoring-project-build
-    key: refactoring-project.zip
+    key: lㅣㅣ -refactoring-project.zip
 
     bundle_type: zip
     application: refactoring-project
-    deployment_group: refactoring-project-group
 
+    deployment_group: refactoring-project-group
     region: ap-northeast-2
     wait-until-deployed: true
 
