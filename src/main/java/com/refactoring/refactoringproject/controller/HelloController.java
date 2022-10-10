@@ -1,4 +1,4 @@
-package com.refactoring.controller;
+package com.refactoring.refactoringproject.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
