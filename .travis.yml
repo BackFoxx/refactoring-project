@@ -16,6 +16,23 @@ cache:
 # master 브랜치에 푸시되었을 때 수행하는 명령어
 script: "./gradlew clean build"
 
+before_deploy:
+  - zip -r refactoring-project *
+  - mkdir -p deploy
+  - mv refactoring-project.zip deploy/refactoring-project.zip
+
+deploy:
+  - provider: s3
+    access_key_id: $AWS_ACCESS_KEY
+    secret_access_key: $AWS_SECRET_KEY
+
+    bucket: refactoring-project-build
+    region: ap-northeast-2
+    skip_cleanup: true
+    acl: private
+    local_dir: deploy
+    wait-until-deployed: true
+
 # CI 실행 완료 시 보낼 알람
 notifications:
   email:
