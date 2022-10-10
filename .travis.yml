@@ -1,0 +1,23 @@
+language: java
+jdk:
+  - openjdk11
+
+# 어떤 브랜치에 푸시되었을 때 CI를 진행할 건가요?
+branches:
+  only:
+    - master
+
+# 그레이들을 통해 받은 의존성을 캐시에 저장하여, 다음 배포때부터 같은 의존성은 주입받지 않기
+cache:
+  directories:
+    - '$HOME/.m2/repository'
+    - '$HOME/.gradle'
+
+# master 브랜치에 푸시되었을 때 수행하는 명령어
+script: "./gradlew clean build"
+
+# CI 실행 완료 시 보낼 알람
+notifications:
+  email:
+    recipients:
+      - 'jorealbusiness@icloud.com'
