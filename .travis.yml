@@ -35,6 +35,20 @@ deploy:
     on: 
       branch: main
 
+  - provider: codedeploy
+    access_key_id: $AWS_ACCESS_KEY
+    secret_access_key: $AWS_SECRET_KEY
+
+    bucket: refactoring-project-build
+    key: refactoring-project.zip
+
+    bundle_type: zip
+    application: refactoring-project
+    deployment_group: refactoring-project-group
+
+    region: ap-northeast-2
+    wait-until-deployed: true
+
 # CI 실행 완료 시 보낼 알람
 notifications:
   email:
