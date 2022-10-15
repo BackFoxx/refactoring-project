@@ -1,6 +1,7 @@
 package com.refactoring.refactoringproject.entity;
 
 import lombok.Getter;
+import org.springframework.util.StringUtils;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -50,11 +51,34 @@ public class RefactoringTodo extends BaseEntityTime {
     @JoinColumn(name = "BEST_PRACTICE")
     private RefactoringDone bestPractice;
 
-    @OneToMany(mappedBy = "refactoringTodo", cascade = CascadeType.PERSIST)
+    @OneToMany(mappedBy = "refactoringTodo", cascade = CascadeType.PERSIST, orphanRemoval = true)
     private List<RefactoringTodoOrder> orders = new ArrayList<>();
 
     @OneToMany(mappedBy = "refactoringTodo")
     private List<Favorite> favorites = new ArrayList<>();
+
+    public void changeCode(String code) {
+        if (!StringUtils.hasText(code)) {
+            throw new IllegalArgumentException("code cannot be null or empty, code : " + code);
+        }
+        this.code = code;
+    }
+
+    public void changeLanguage(String language) {
+        if (!StringUtils.hasText(language)) {
+            throw new IllegalArgumentException("language cannot be null or empty, language : " + language);
+        }
+        this.language = language;
+    }
+
+    public void changeDescription(String description) {
+        this.description = description;
+    }
+
+    public void changeOrders(List<RefactoringTodoOrder> orders) {
+        this.orders.clear();
+        orders.forEach(order -> this.addRefactoringOrder(order));
+    }
 
     public void addRefactoringOrder(RefactoringTodoOrder order) {
         this.orders.add(order);

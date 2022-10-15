@@ -345,10 +345,47 @@ class RefactoringTodoServiceTest {
         }
     }
 
+    @Test
+    @DisplayName("존재하는 리팩토링 대상 코드에 대해 올바른 내용으로 수정 요청하면 성공한다.")
+    void givenUpdateFormatToExistingArticle_whenUpdatingRefactoringTodo_thenSuccess() {
+        // given
+        Member member = this.signInMember();
+        Long savedRefactoringTodoId = this.saveRefactoringTodoWithMemberCondition(member);
+
+        String language = "JAVA"; // language 영역은 바꾸지 않았음
+        String code = "    public void mapEntity(RefactoringTodo target) {\n" +
+                "        target.changeLanguage(language);\n" +
+                "        target.changeCode(code);\n" +
+                "        target.changeDescription(description);\n" +
+                "        List<RefactoringTodoOrder> orders = todoOrderFormat.stream()\n" +
+                "                .map(RefactoringTodoOrderFormat::toEntity)\n" +
+                "                .collect(Collectors.toList());\n" +
+                "        target.changeOrders(orders);\n" +
+                "    }";
+        String description = "기존의 리팩토링 대상 코드를 업데이트할 내용입니다.";
+        RefactoringTodoOrderFormat refactoringTodoOrderFormat = RefactoringTodoOrderFormat.of("개 소리 좀 안 나게 해라!!!!"); // 기존에 2개 등록되어 있었는데, order 하나를 삭제함
+
+        RefactoringTodoUpdateFormat refactoringTodoUpdateFormat = RefactoringTodoUpdateFormat.of(savedRefactoringTodoId, member, language, code, description, List.of(refactoringTodoOrderFormat));
+
+        // when
+        refactoringTodoService.updateRefactoringTodo(refactoringTodoUpdateFormat);
+        em.flush();
+        em.clear();
+
+        // then
+        RefactoringTodo target = this.refactoringTodoRepository.findById(savedRefactoringTodoId).get();
+        assertThat(target.getLanguage()).isEqualTo(language);
+        assertThat(target.getCode()).isEqualTo(code);
+        assertThat(target.getDescription()).isEqualTo(description);
+        assertThat(target.getOrders())
+                .extracting(RefactoringTodoOrder::getContent)
+                .containsExactly("개 소리 좀 안 나게 해라!!!!");
+    }
+
     /*
-    * 고정된 ID의 회원 저장과 리팩토링 대상 코드 저장을 함께 하므로,
-    * 동일한 트랜잭션에서 해당 코드를 여러 번 실행하면 예외가 발생한다.
-    * */
+     * 고정된 ID의 회원 저장과 리팩토링 대상 코드 저장을 함께 하므로,
+     * 동일한 트랜잭션에서 해당 코드를 여러 번 실행하면 예외가 발생한다.
+     * */
     private Long saveMemberAndSaveRefactoringTodo() {
         Member member = this.signInMember();
 

@@ -1,9 +1,8 @@
 package com.refactoring.refactoringproject.service;
 
-import com.refactoring.refactoringproject.dto.RefactoringTodoFormat;
-import com.refactoring.refactoringproject.dto.RefactoringTodoOrderResponse;
-import com.refactoring.refactoringproject.dto.RefactoringTodoResponse;
+import com.refactoring.refactoringproject.dto.*;
 import com.refactoring.refactoringproject.entity.RefactoringTodo;
+import com.refactoring.refactoringproject.entity.RefactoringTodoOrder;
 import com.refactoring.refactoringproject.repository.RefactoringTodoRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,10 +12,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
+@Transactional
 @Slf4j
 @RequiredArgsConstructor
 public class RefactoringTodoService {
@@ -52,5 +55,21 @@ public class RefactoringTodoService {
 
     public Page<RefactoringTodoResponse> findList(Pageable pageable) {
         return refactoringTodoRepository.findListWithFavoriteCount(pageable);
+    }
+
+    public void updateRefactoringTodo(RefactoringTodoUpdateFormat refactoringTodoUpdateFormat) {
+        Optional<RefactoringTodo> targetOptional = refactoringTodoRepository.findById(refactoringTodoUpdateFormat.getRefactoringTodoId());
+        if (targetOptional.isEmpty()) {
+            throw new IllegalArgumentException("you tried to update a RefactoringTodo which is not existing");
+        }
+        RefactoringTodo target = targetOptional.get();
+
+        target.changeLanguage(refactoringTodoUpdateFormat.getLanguage());
+        target.changeCode(refactoringTodoUpdateFormat.getCode());
+        target.changeDescription(refactoringTodoUpdateFormat.getDescription());
+        List<RefactoringTodoOrder> orders = refactoringTodoUpdateFormat.getTodoOrderFormat().stream()
+                .map(RefactoringTodoOrderFormat::toEntity)
+                .collect(Collectors.toList());
+        target.changeOrders(orders);
     }
 }
