@@ -9,6 +9,9 @@ import com.refactoring.refactoringproject.repository.RefactoringTodoRepository;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -21,9 +24,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.Validator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -380,6 +388,125 @@ class RefactoringTodoServiceTest {
         assertThat(target.getOrders())
                 .extracting(RefactoringTodoOrder::getContent)
                 .containsExactly("개 소리 좀 안 나게 해라!!!!");
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 리팩토링 대상 코드를 수정 시도하면 예외가 발생한다")
+    void givenUpdateFormatToNonExistingArticle_whenUpdatingRefactoringTodo_thenThrowsException() {
+        Member member = this.signInMember();
+        Long savedRefactoringTodoId = -1L; // 존재하지 않는 리팩토링 대상 코드
+
+        String language = "JAVA"; // language 영역은 바꾸지 않았음
+        String code = "    public void mapEntity(RefactoringTodo target) {\n" +
+                "        target.changeLanguage(language);\n" +
+                "        target.changeCode(code);\n" +
+                "        target.changeDescription(description);\n" +
+                "        List<RefactoringTodoOrder> orders = todoOrderFormat.stream()\n" +
+                "                .map(RefactoringTodoOrderFormat::toEntity)\n" +
+                "                .collect(Collectors.toList());\n" +
+                "        target.changeOrders(orders);\n" +
+                "    }";
+        String description = "기존의 리팩토링 대상 코드를 업데이트할 내용입니다.";
+        RefactoringTodoOrderFormat refactoringTodoOrderFormat = RefactoringTodoOrderFormat.of("개 소리 좀 안 나게 해라!!!!"); // 기존에 2개 등록되어 있었는데, order 하나를 삭제함
+
+        RefactoringTodoUpdateFormat refactoringTodoUpdateFormat = RefactoringTodoUpdateFormat.of(savedRefactoringTodoId, member, language, code, description, List.of(refactoringTodoOrderFormat));
+
+        // when && then
+        assertThatThrownBy(() -> refactoringTodoService.updateRefactoringTodo(refactoringTodoUpdateFormat))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("you tried to update a RefactoringTodo which is not existing");
+    }
+
+
+
+    @ParameterizedTest
+    @MethodSource("invalidFormats")
+    @DisplayName("올바르지 않은 내용으로 리팩토링 대상 코드를 수정 시도하면 예외가 발생한다.")
+    void givenInvalidUpdateFormatToExistingArticle_whenUpdatingRefactoringTodo_thenThrowsException(RefactoringTodoUpdateFormat refactoringTodoUpdateFormat, String errorCause) {
+        // given
+        Member member = this.signInMember();
+        Long savedRefactoringTodoId = this.saveRefactoringTodoWithMemberCondition(member);
+
+        refactoringTodoUpdateFormat.setRefactoringTodoId(savedRefactoringTodoId);
+        refactoringTodoUpdateFormat.setMember(member);
+
+        // when
+        Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
+
+        // then
+        Set<ConstraintViolation<RefactoringTodoUpdateFormat>> violations = validator.validate(refactoringTodoUpdateFormat);
+        assertThat(violations).hasSize(1);
+        violations.forEach(error -> {
+            assertThat(error.getPropertyPath().toString()).endsWith(errorCause);
+        });
+
+    }
+
+    private static Stream<Arguments> invalidFormats() {
+        return Stream.of(
+                Arguments.of(
+                        RefactoringTodoUpdateFormat
+                                .of(null, null, "", "System.out.println(\"괜찮은 코드\")",
+                                        "괜찮은 설명", List.of(RefactoringTodoOrderFormat.of("개 소리 좀 안 나게 해라!!!!"))),
+                        "language"),
+                // 비어있는 language 값
+                Arguments.of(
+                        RefactoringTodoUpdateFormat
+                                .of(null, null, "JAVA", makeString(10100),
+                                        "괜찮은 설명", List.of(RefactoringTodoOrderFormat.of("개 소리 좀 안 나게 해라!!!!"))),
+                        "code"),
+                // 10,000자를 넘어가는 code 값
+                Arguments.of(
+                        RefactoringTodoUpdateFormat
+                                .of(null, null, "JAVA", "System.out.println(\"괜찮은 코드\")",
+                                        makeString(1100), List.of(RefactoringTodoOrderFormat.of("개 소리 좀 안 나게 해라!!!!"))),
+                        "description"),
+                // 1,000자를 넘어가는 description 값
+                Arguments.of(
+                        RefactoringTodoUpdateFormat
+                                .of(null, null, "JAVA", "System.out.println(\"괜찮은 코드\")",
+                                        "괜찮은 설명", List.of(RefactoringTodoOrderFormat.of(makeString(210)))),
+                        "content")
+                // 200자를 넘어가는 리팩토링 대상 코드 요구사항
+        );
+    }
+
+    private static String makeString(int length) {
+        StringBuilder stringBuilder = new StringBuilder();
+        for (int i = 0; i < length; i++) {
+            stringBuilder.append("*");
+        }
+        return stringBuilder.toString();
+    }
+
+    @Test
+    @DisplayName("리팩토링 대상 코드의 작성자와 수정을 시도하는 사용자의 정보가 다르면 예외가 발생한다.")
+    void givenUpdateFormatToExistingArticle_whenUpdatingRefactoringTodoByAnotherUser_ThenThrowsException() {
+        // given
+        Member nanoMember = this.signInMemberWithEmailCondition("nano@gmail.com");
+        Member baboMember = this.signInMemberWithEmailCondition("babo@gmail.com");
+        Long savedRefactoringTodoIdByNano = this.saveRefactoringTodoWithMemberCondition(nanoMember);
+
+        String language = "JAVA"; // language 영역은 바꾸지 않았음
+        String code = "    public void mapEntity(RefactoringTodo target) {\n" +
+                "        target.changeLanguage(language);\n" +
+                "        target.changeCode(code);\n" +
+                "        target.changeDescription(description);\n" +
+                "        List<RefactoringTodoOrder> orders = todoOrderFormat.stream()\n" +
+                "                .map(RefactoringTodoOrderFormat::toEntity)\n" +
+                "                .collect(Collectors.toList());\n" +
+                "        target.changeOrders(orders);\n" +
+                "    }";
+        String description = "기존의 리팩토링 대상 코드를 업데이트할 내용입니다.";
+        RefactoringTodoOrderFormat refactoringTodoOrderFormat = RefactoringTodoOrderFormat.of("개 소리 좀 안 나게 해라!!!!"); // 기존에 2개 등록되어 있었는데, order 하나를 삭제함
+
+        RefactoringTodoUpdateFormat refactoringTodoUpdateFormat = RefactoringTodoUpdateFormat
+                .of(savedRefactoringTodoIdByNano, baboMember, language, code, description, List.of(refactoringTodoOrderFormat)); // 글 작성자가 아닌 babo가 수정을 요청한다.
+
+        // when & then
+        assertThatThrownBy(() -> refactoringTodoService.updateRefactoringTodo(refactoringTodoUpdateFormat))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("you tried to update refactoringTodo written by another user");
     }
 
     /*

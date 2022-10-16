@@ -61,8 +61,12 @@ public class RefactoringTodoService {
         Optional<RefactoringTodo> targetOptional = refactoringTodoRepository.findById(refactoringTodoUpdateFormat.getRefactoringTodoId());
         if (targetOptional.isEmpty()) {
             throw new IllegalArgumentException("you tried to update a RefactoringTodo which is not existing");
-        }
+        } // 수정하려는 RefactoringTodo가 존재하는지 검사
         RefactoringTodo target = targetOptional.get();
+
+        if (!refactoringTodoUpdateFormat.getMember().equals(target.getMember())) {
+            throw new IllegalArgumentException("you tried to update refactoringTodo written by another user");
+        }
 
         target.changeLanguage(refactoringTodoUpdateFormat.getLanguage());
         target.changeCode(refactoringTodoUpdateFormat.getCode());
