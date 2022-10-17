@@ -44,9 +44,11 @@ deploy:
   - provider: codedeploy
     access_key_id: $AWS_ACCESS_KEY
     secret_access_key: $AWS_SECRET_KEY
+
     bucket: refactoring-project-build
     key: refactoring-project.zip
     bundle_type: zip
+    
     application: refactoring-project
     deployment_group: refactoring-project-group
     region: ap-northeast-2
