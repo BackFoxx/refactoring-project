@@ -1,8 +1,13 @@
 package com.refactoring.refactoringproject.entity;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 import javax.persistence.*;
 
+@Getter
 @Entity
+@NoArgsConstructor
 public class RefactoringDone {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -21,4 +26,12 @@ public class RefactoringDone {
 
     @Column(length = 1000)
     private String description;
+
+    public RefactoringDone(Long id, RefactoringTodo refactoringTodo, Member member, String code, String description) {
+        this.id = id;
+        this.refactoringTodo = refactoringTodo;
+        this.member = member;
+        this.code = code;
+        this.description = description;
+    }
 }
