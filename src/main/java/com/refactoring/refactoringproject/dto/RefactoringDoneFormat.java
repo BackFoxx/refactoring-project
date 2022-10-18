@@ -5,9 +5,15 @@ import com.refactoring.refactoringproject.entity.RefactoringDone;
 import com.refactoring.refactoringproject.entity.RefactoringTodo;
 import com.refactoring.refactoringproject.service.RefactoringTodoService;
 import lombok.Getter;
+import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
 @Getter
+@Setter
 public class RefactoringDoneFormat {
 
     private RefactoringDoneFormat(Long refactoringTodoId, Member member, String code, String description) {
@@ -20,9 +26,15 @@ public class RefactoringDoneFormat {
     @Autowired
     private RefactoringTodoService refactoringTodoService;
 
+    @NotNull
     private Long refactoringTodoId;
+    @NotNull
     private Member member;
+    @Size(max = 10000)
+    @NotEmpty
     private String code;
+
+    @Size(max = 1000)
     private String description;
 
     public static RefactoringDoneFormat of(Long refactoringTodoId, Member member, String code, String description) {

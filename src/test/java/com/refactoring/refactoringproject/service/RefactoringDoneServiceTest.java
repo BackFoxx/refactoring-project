@@ -7,21 +7,29 @@ import com.refactoring.refactoringproject.repository.MemberRepository;
 import com.refactoring.refactoringproject.repository.RefactoringDoneRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.Validator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Stream;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.*;
 
 @SpringBootTest
 @Transactional
 class RefactoringDoneServiceTest {
-    @Autowired
+    @PersistenceContext
     EntityManager em;
 
     @Autowired
@@ -74,6 +82,81 @@ class RefactoringDoneServiceTest {
         assertThat(result.getMember()).isEqualTo(baboMember);
         assertThat(result.getCode()).isEqualTo(code);
         assertThat(result.getDescription()).isEqualTo(description);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 리팩토링 대상 코드에 대해 리팩토링 한 코드를 등록 요청 시 예외를 던진다.")
+    void givenValidRefactoringDoneToNonExistingRefactoringTodo_whenSavingRefactoringTodo_thenThrowsException() {
+        // given
+        Member member = this.signInMemberWithEmailCondition("nano@gmail.com");
+
+        String code = "String id = email;\n" +
+                "        String password = \"testpassword1234\";\n" +
+                "        String level = \"주니어\";";
+        String description = "완벽한 균형을 이루는 하나의 리팩토링 코드";
+
+        RefactoringDoneFormat format = RefactoringDoneFormat.of(
+                -1L, // 존재하지 않는 리팩토링 대상 코드
+                member,
+                code,
+                description
+        );
+
+        // when && then
+        assertThatThrownBy(() -> refactoringDoneService.saveRefactoringDone(format))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("you tried to post a RefactoringDone of RefactoringTodo which is not existing");
+    }
+
+    @ParameterizedTest(name = "{index}번 -> 잘못된 형식의 {1}")
+    @MethodSource("invalidFormats")
+    @DisplayName("올바르지 않은 내용으로 리팩토링 한 코드를 등록 요청 시 예외를 던진다.")
+    void givenInValidRefactoringDoneToExistingRefactoringTodo_whenSavingRefactoringTodo_thenThrowsException(RefactoringDoneFormat format, String errorCause) {
+        // given
+        Member member = this.signInMemberWithEmailCondition("nano@gmail.com");
+        Long savedRefactoringTodoId = this.saveRefactoringTodoWithMemberCondition(member);
+        format.setRefactoringTodoId(savedRefactoringTodoId);
+        format.setMember(member);
+
+        // when & then
+        Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
+        Set<ConstraintViolation<RefactoringDoneFormat>> violations = validator.validate(format);
+
+        assertThat(violations).hasSize(1);
+        for (ConstraintViolation<RefactoringDoneFormat> violation : violations) {
+            assertThat(violation.getPropertyPath().toString()).endsWith(errorCause);
+        }
+    }
+
+    private static Stream<Arguments> invalidFormats() {
+        return Stream.of(
+                Arguments.of(
+                        RefactoringDoneFormat.of(
+                                null,
+                                null,
+                                makeString(11000), // 10,000자를 넘어가는 리팩토링 코드
+                                "정상적인 코드 설명"
+                        ),
+                        "code"
+                ),
+                Arguments.of(
+                        RefactoringDoneFormat.of(
+                                null,
+                                null,
+                                "System.out.println(\"정상적인 코드\")",
+                                makeString(1100) // 1,000자를 넘어가는 리팩토링 코드 설명
+                        ),
+                        "description"
+                )
+        );
+    }
+
+    private static String makeString(int length) {
+        StringBuilder stringBuilder = new StringBuilder();
+        for (int i = 0; i < length; i++) {
+            stringBuilder.append("*");
+        }
+        return stringBuilder.toString();
     }
 
     private Member signInMemberWithEmailCondition(String email) {

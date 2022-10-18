@@ -20,7 +20,7 @@ public class RefactoringDoneService {
 
     public Long saveRefactoringDone(RefactoringDoneFormat format) {
         Optional<RefactoringTodo> refactoringTodoOptional = refactoringTodoRepository.findById(format.getRefactoringTodoId());
-        if (refactoringTodoOptional.isEmpty()) throw new IllegalArgumentException();
+        if (refactoringTodoOptional.isEmpty()) throw new IllegalArgumentException("you tried to post a RefactoringDone of RefactoringTodo which is not existing");
         RefactoringTodo refactoringTodo = refactoringTodoOptional.get();
 
         RefactoringDone refactoringDone = RefactoringDoneFormat.toEntity(refactoringTodo, format);
