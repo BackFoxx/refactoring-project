@@ -50,6 +50,11 @@ deploy:
     deployment_group: refactoring-project-group
     region: ap-northeast-2
     wait-until-deployed: true
+<<<<<<< HEAD
+=======
+    on:
+      branch: main
+>>>>>>> parent of 8769f13... 개발 블로그 작성 자료로 사용하기 위해 오류가 있는 travis.yml 파일 생성
 
 # CI 실행 완료 시 보낼 알람
 notifications:
