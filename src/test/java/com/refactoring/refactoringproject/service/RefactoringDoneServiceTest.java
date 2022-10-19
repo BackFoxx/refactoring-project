@@ -12,6 +12,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
@@ -149,6 +150,48 @@ class RefactoringDoneServiceTest {
                         "description"
                 )
         );
+    }
+
+    @Test
+    @DisplayName("유효한 id를 이용해 리팩토링 한 코드 한 건을 조회할 수 있다.")
+    void givenValidRefactoringDoneId_whenFindOneByGivenId_thenReturnsRefactoringDone() {
+        // given
+        Member member = this.signInMemberWithEmailCondition("nano@gmail.com");
+
+        String code = "String id = email;\n" +
+                "        String password = \"testpassword1234\";\n" +
+                "        String level = \"주니어\";";
+        String description = "완벽한 균형을 이루는 하나의 리팩토링 코드";
+
+        Long savedRefactoringTodoId = this.saveRefactoringTodoWithMemberCondition(member);
+
+        RefactoringDoneFormat format = RefactoringDoneFormat.of(
+                savedRefactoringTodoId,
+                member,
+                code,
+                description
+        );
+
+        Long savedRefactoringDoneId = this.refactoringDoneService.saveRefactoringDone(format);
+
+        // when
+        RefactoringDoneResponse result = this.refactoringDoneService.findOneById(savedRefactoringDoneId);
+
+        // then
+        assertThat(result.getId()).isEqualTo(savedRefactoringDoneId);
+        assertThat(result.getMember()).isEqualTo(member);
+        assertThat(result.getRefactoringTodoResponse().getId()).isEqualTo(savedRefactoringTodoId);
+        assertThat(result.getCode()).isEqualTo(code);
+        assertThat(result.getDescription()).isEqualTo(description);
+    }
+
+    @Test
+    @DisplayName("유효하지 않은 id를 이용해 리팩토링 한 코드 한 건을 조회시 예외를 던진다.")
+    void givenInValidRefactoringDoneId_whenFindOneByGivenId_thenThrowsException() {
+        // given & when & then
+        assertThatThrownBy(() -> this.refactoringDoneService.findOneById(-1L))
+                .isInstanceOf(EmptyResultDataAccessException.class)
+                .hasMessage("there is no RefactoringDone with id -1");
     }
 
     private static String makeString(int length) {
