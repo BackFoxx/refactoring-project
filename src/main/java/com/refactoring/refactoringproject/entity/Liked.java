@@ -1,8 +1,15 @@
 package com.refactoring.refactoringproject.entity;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 import javax.persistence.*;
 
 @Entity
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Liked {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
