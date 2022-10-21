@@ -1,8 +1,11 @@
 package com.refactoring.refactoringproject.service;
 
 import com.refactoring.refactoringproject.dto.*;
+import com.refactoring.refactoringproject.entity.Liked;
 import com.refactoring.refactoringproject.entity.Member;
 import com.refactoring.refactoringproject.entity.RefactoringDone;
+import com.refactoring.refactoringproject.entity.RefactoringTodo;
+import com.refactoring.refactoringproject.repository.LikedRepository;
 import com.refactoring.refactoringproject.repository.MemberRepository;
 import com.refactoring.refactoringproject.repository.RefactoringDoneRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -47,6 +50,9 @@ class RefactoringDoneServiceTest {
 
     @Autowired
     MemberRepository memberRepository;
+
+    @Autowired
+    LikedRepository likedRepository;
 
     @Test
     @DisplayName("존재하는 리팩토링 대상 코드에 대해 올바른 내용으로 리팩토링 한 코드를 등록 요청 시 성공한다.")
@@ -200,6 +206,82 @@ class RefactoringDoneServiceTest {
             stringBuilder.append("*");
         }
         return stringBuilder.toString();
+    }
+
+    @Test
+    @DisplayName("다른 사람이 작성한 리팩토링 한 코드 게시글에 좋아요를 등록할 수 있다.")
+    void givenMemberAndRefactoringDoneWrittenByAnother_whenPostingLike_thenSuccess() {
+        // given
+        Member nanoMember = this.signInMemberWithEmailCondition("nano@gmail.com");
+        Member baboMember = this.signInMemberWithEmailCondition("babo@gmail.com");
+        Long savedRefactoringTodoByNano = this.saveRefactoringTodoWithMemberCondition(nanoMember);
+
+        Long savedRefactoringDoneByBabo = this.saveRefactoringDoneWithMemberAndRefactoringTodoCondition(baboMember, savedRefactoringTodoByNano);
+
+        // when
+        this.refactoringDoneService.assignLike(nanoMember, savedRefactoringDoneByBabo);
+
+        // then
+        List<Liked> result = this.likedRepository.findAll();
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0)
+                .getMember())
+                .isEqualTo(nanoMember);
+
+        assertThat(result.get(0)
+                .getRefactoringDone().getId())
+                .isEqualTo(savedRefactoringDoneByBabo);
+    }
+
+    @Test
+    @DisplayName("내가 작성한 리팩토링 한 코드 게시글을 좋아요할 수 없다.")
+    void givenMemberAndRefactoringDoneWrittenByMe_whenPostingLike_thenThrowsException() {
+        // given
+        Member nanoMember = this.signInMemberWithEmailCondition("nano@gmail.com");
+        Member baboMember = this.signInMemberWithEmailCondition("babo@gmail.com");
+        Long savedRefactoringTodoByNano = this.saveRefactoringTodoWithMemberCondition(nanoMember);
+
+        Long savedRefactoringDoneByBabo = this.saveRefactoringDoneWithMemberAndRefactoringTodoCondition(baboMember, savedRefactoringTodoByNano);
+
+        // when && then
+        assertThatThrownBy(() -> this.refactoringDoneService.assignLike(baboMember, savedRefactoringDoneByBabo))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("You can't post like to RefactoringDone written by yourself");
+        // 바보가 쓴 글을 바보가 좋아요한다.
+    }
+
+    @Test
+    @DisplayName("이미 좋아요 누른 게시글을 또 좋아요 요청할 수 없다.")
+    void givenMemberAndRefactoringDoneAlreadyLiked_whenPostingLike_thenThrowsException() {
+        // given
+        Member nanoMember = this.signInMemberWithEmailCondition("nano@gmail.com");
+        Member baboMember = this.signInMemberWithEmailCondition("babo@gmail.com");
+        Long savedRefactoringTodoByNano = this.saveRefactoringTodoWithMemberCondition(nanoMember);
+
+        Long savedRefactoringDoneByBabo = this.saveRefactoringDoneWithMemberAndRefactoringTodoCondition(baboMember, savedRefactoringTodoByNano);
+
+        this.refactoringDoneService.assignLike(nanoMember, savedRefactoringDoneByBabo);
+
+        // when & then
+        assertThatThrownBy(() -> this.refactoringDoneService.assignLike(nanoMember, savedRefactoringDoneByBabo))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("You can't post like to RefactoringDone you already posted");
+    }
+
+    private Long saveRefactoringDoneWithMemberAndRefactoringTodoCondition(Member member, Long refactoringTodoId) {
+        String code = "String id = email;\n" +
+                "        String password = \"testpassword1234\";\n" +
+                "        String level = \"주니어\";";
+        String description = "완벽한 균형을 이루는 하나의 리팩토링 코드";
+
+        RefactoringDoneFormat format = RefactoringDoneFormat.of(
+                refactoringTodoId,
+                member,
+                code,
+                description
+        );
+
+        return this.refactoringDoneService.saveRefactoringDone(format);
     }
 
     private Member signInMemberWithEmailCondition(String email) {
