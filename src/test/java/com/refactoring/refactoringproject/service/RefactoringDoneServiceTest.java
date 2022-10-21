@@ -268,6 +268,48 @@ class RefactoringDoneServiceTest {
                 .hasMessage("You can't post like to RefactoringDone you already posted");
     }
 
+    @Test
+    @DisplayName("리팩토링 한 코드에 달린 좋아요를 삭제할 수 있다.")
+    void givenRefactoringDoneId_whenDeletingLike_thenSuccess() {
+        // given
+        Member nanoMember = this.signInMemberWithEmailCondition("nano@gmail.com");
+        Member baboMember = this.signInMemberWithEmailCondition("babo@gmail.com");
+        Long savedRefactoringTodoByNano = this.saveRefactoringTodoWithMemberCondition(nanoMember);
+
+        Long savedRefactoringDoneByBabo = this.saveRefactoringDoneWithMemberAndRefactoringTodoCondition(baboMember, savedRefactoringTodoByNano);
+
+        this.refactoringDoneService.assignLike(nanoMember, savedRefactoringDoneByBabo);
+        List<Liked> likeList = this.likedRepository.findAll();
+        assertThat(likeList).hasSize(1);
+
+        // when
+        this.refactoringDoneService.deleteLike(nanoMember, savedRefactoringDoneByBabo);
+
+        // then
+        likeList = this.likedRepository.findAll();
+        assertThat(likeList).hasSize(0);
+    }
+
+    @Test
+    @DisplayName("좋아요를 등록한 적 없는 게시글에 대해 좋아요를 삭제할 수 없다.")
+    void givenRefactoringDoneIdThatNeverLiked_whenDeletingLike_thenThrowsException() {
+        // given
+        Member nanoMember = this.signInMemberWithEmailCondition("nano@gmail.com");
+        Member baboMember = this.signInMemberWithEmailCondition("babo@gmail.com");
+        Long savedRefactoringTodoByNano = this.saveRefactoringTodoWithMemberCondition(nanoMember);
+
+        Long savedRefactoringDoneByBabo = this.saveRefactoringDoneWithMemberAndRefactoringTodoCondition(baboMember, savedRefactoringTodoByNano);
+
+        this.refactoringDoneService.assignLike(nanoMember, savedRefactoringDoneByBabo);
+        List<Liked> likeList = this.likedRepository.findAll();
+        assertThat(likeList).hasSize(1);
+
+        // when && then
+        assertThatThrownBy(() -> this.refactoringDoneService.deleteLike(baboMember, savedRefactoringDoneByBabo)) // baboMember로 좋아요를 등록한 적 없다.
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("You may not have posted like on this RefactoringDone");
+    }
+
     private Long saveRefactoringDoneWithMemberAndRefactoringTodoCondition(Member member, Long refactoringTodoId) {
         String code = "String id = email;\n" +
                 "        String password = \"testpassword1234\";\n" +

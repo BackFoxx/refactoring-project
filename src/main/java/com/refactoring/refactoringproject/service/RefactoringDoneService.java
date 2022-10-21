@@ -56,4 +56,11 @@ public class RefactoringDoneService {
         Liked liked = new Liked(null, member, refactoringDone);
         likedRepository.save(liked);
     }
+
+    public void deleteLike(Member member, Long refactoringDoneId) {
+        Optional<Liked> likeOptional = this.likedRepository.findByMemberAndRefactoringDone_Id(member, refactoringDoneId);
+        Liked liked = likeOptional.orElseThrow(() -> new IllegalArgumentException("You may not have posted like on this RefactoringDone"));
+
+        this.likedRepository.delete(liked);
+    }
 }
