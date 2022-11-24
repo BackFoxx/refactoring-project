@@ -10,6 +10,10 @@ import java.util.List;
 @Entity
 @Getter
 public class RefactoringTodo extends BaseEntityTime {
+
+    public static final String CODE_CANNOT_BE_NULL_OR_EMPTY_MESSAGE_FORMAT = "code cannot be null or empty, code : ";
+    public static final String LANGUAGE_CANNOT_BE_NULL_OR_EMPTY_MESSAGE_FORMAT = "language cannot be null or empty, language : %s";
+
     public RefactoringTodo() {
     }
 
@@ -59,14 +63,14 @@ public class RefactoringTodo extends BaseEntityTime {
 
     public void changeCode(String code) {
         if (!StringUtils.hasText(code)) {
-            throw new IllegalArgumentException("code cannot be null or empty, code : " + code);
+            throw new IllegalArgumentException(String.format(CODE_CANNOT_BE_NULL_OR_EMPTY_MESSAGE_FORMAT + code));
         }
         this.code = code;
     }
 
     public void changeLanguage(String language) {
         if (!StringUtils.hasText(language)) {
-            throw new IllegalArgumentException("language cannot be null or empty, language : " + language);
+            throw new IllegalArgumentException(String.format(LANGUAGE_CANNOT_BE_NULL_OR_EMPTY_MESSAGE_FORMAT, language));
         }
         this.language = language;
     }
@@ -77,7 +81,7 @@ public class RefactoringTodo extends BaseEntityTime {
 
     public void changeOrders(List<RefactoringTodoOrder> orders) {
         this.orders.clear();
-        orders.forEach(order -> this.addRefactoringOrder(order));
+        orders.forEach(this::addRefactoringOrder);
     }
 
     public void addRefactoringOrder(RefactoringTodoOrder order) {

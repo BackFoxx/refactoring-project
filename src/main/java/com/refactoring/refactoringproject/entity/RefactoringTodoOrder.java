@@ -7,6 +7,8 @@ import javax.persistence.*;
 @Entity
 @Getter
 public class RefactoringTodoOrder extends BaseEntityTime {
+    public static final String CHANGING_REFACTORING_TODO_ALREADT_ASSIGNED_MESSAGE = "You can't change RefactoringTodo of RefactoringOrder which is already assigned.";
+
     public RefactoringTodoOrder() {
     }
 
@@ -29,7 +31,7 @@ public class RefactoringTodoOrder extends BaseEntityTime {
 
     public void assignRefactoringTodo(RefactoringTodo refactoringTodo) {
         if (this.refactoringTodo != null) {
-            throw new IllegalArgumentException("You can't change RefactoringTodo of RefactoringOrder which is already assigned.");
+            throw new IllegalArgumentException(CHANGING_REFACTORING_TODO_ALREADT_ASSIGNED_MESSAGE);
         }
 
         this.refactoringTodo = refactoringTodo;

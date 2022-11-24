@@ -8,6 +8,9 @@ import javax.persistence.*;
 @Getter
 @Table(name = "CAREER")
 public class Career extends BaseEntityTime {
+
+    public static final String CHANGING_MEMBER_MESSAGE = "You can't change Member of Career which is already assigned.";
+
     public Career() {
     }
 
@@ -35,7 +38,7 @@ public class Career extends BaseEntityTime {
 
     public void assignMember(Member member) {
         if (this.member != null) {
-            throw new IllegalArgumentException("You can't change Member of Career which is already assigned.");
+            throw new IllegalArgumentException(CHANGING_MEMBER_MESSAGE);
         }
 
         this.member = member;
