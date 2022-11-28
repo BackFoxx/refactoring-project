@@ -8,6 +8,7 @@ import com.refactoring.refactoringproject.entity.RefactoringTodo;
 import com.refactoring.refactoringproject.repository.LikedRepository;
 import com.refactoring.refactoringproject.repository.MemberRepository;
 import com.refactoring.refactoringproject.repository.RefactoringDoneRepository;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -33,6 +34,28 @@ import static org.assertj.core.api.Assertions.*;
 @SpringBootTest
 @Transactional
 class RefactoringDoneServiceTest {
+    public static final String TEST_GMAIL_EMAIL = "test@gmail.com";
+    public static final String TEST_PASSWORD = "testpassword1234";
+    public static final String JUNIOR = "주니어";
+    public static final String SAMSUNG_POOP_TEAM = "삼성전자 응가부서";
+    public static final String NAVER_NUCLEAR_TEAM = "네이버 핵폭탄부서";
+    public static final String TEST2_GMAIL_EMAIL = "test2@gmail.com";
+    public static final String TEST_DESCRIPTION = "유효한 새 게시글이 제공되면 글이 정상적으로 등록된다.";
+    public static final String TEST_CODE = "    private String signInMember() {\n" +
+            "        String email = \"test@gmail.com\";\n" +
+            "        String password = \"testpassword1234\";\n" +
+            "        String level = \"주니어\";\n" +
+            "\n" +
+            "        CareerFormat career1 = new CareerFormat(\"삼성전자 응가부서\", 30);\n" +
+            "        CareerFormat career2 = new CareerFormat(\"네이버 핵폭탄부서\", 4);\n" +
+            "\n" +
+            "        MemberSignInFormat signInFormat = MemberSignInFormat.of(email, password, level, List.of(career1, career2));\n" +
+            "\n" +
+            "        memberService.signIn(signInFormat);\n" +
+            "\n" +
+            "        return email;\n" +
+            "    }";
+    public static final String TEST_LANGUAGE = "JAVA";
     @PersistenceContext
     EntityManager em;
 
@@ -58,20 +81,15 @@ class RefactoringDoneServiceTest {
     @DisplayName("존재하는 리팩토링 대상 코드에 대해 올바른 내용으로 리팩토링 한 코드를 등록 요청 시 성공한다.")
     void givenValidRefactoringDoneToExistingRefactoringTodo_whenSavingRefactoringTodo_thenSuccess() {
         // given
-        Member nanoMember = this.signInMemberWithEmailCondition("nano@gmail.com");
-        Member baboMember = this.signInMemberWithEmailCondition("babo@gmail.com");
-        Long savedRefactoringTodoIdByNano = this.saveRefactoringTodoWithMemberCondition(nanoMember);
-
-        String code = "String id = email;\n" +
-                "        String password = \"testpassword1234\";\n" +
-                "        String level = \"주니어\";";
-        String description = "완벽한 균형을 이루는 하나의 리팩토링 코드";
+        Member testMember = this.signInMemberWithEmailCondition(TEST_GMAIL_EMAIL);
+        Member testMember2 = this.signInMemberWithEmailCondition(TEST2_GMAIL_EMAIL);
+        Long savedRefactoringTodoIdByNano = this.saveRefactoringTodoWithMemberCondition(testMember);
 
         RefactoringDoneFormat format = RefactoringDoneFormat.of(
                 savedRefactoringTodoIdByNano,
-                baboMember,
-                code,
-                description
+                testMember2,
+                TEST_CODE,
+                TEST_DESCRIPTION
         );
 
         // when
@@ -80,37 +98,30 @@ class RefactoringDoneServiceTest {
         em.clear();
 
         // then
-        Optional<RefactoringDone> resultOptional = refactoringDoneRepository.findById(savedRefactoringDoneId);
-        if (resultOptional.isEmpty()) fail("target Not Saved");
-        RefactoringDone result = resultOptional.get();
+        RefactoringDone result = refactoringDoneRepository
+                .findById(savedRefactoringDoneId)
+                .orElseThrow(() -> fail("실패"));
 
         assertThat(savedRefactoringDoneId).isEqualTo(result.getId());
         assertThat(result.getRefactoringTodo().getId()).isEqualTo(savedRefactoringTodoIdByNano);
-        assertThat(result.getMember()).isEqualTo(baboMember);
-        assertThat(result.getCode()).isEqualTo(code);
-        assertThat(result.getDescription()).isEqualTo(description);
+        assertThat(result.getMember()).isEqualTo(testMember2);
+        assertThat(result.getCode()).isEqualTo(TEST_CODE);
+        assertThat(result.getDescription()).isEqualTo(TEST_DESCRIPTION);
     }
 
     @Test
     @DisplayName("존재하지 않는 리팩토링 대상 코드에 대해 리팩토링 한 코드를 등록 요청 시 예외를 던진다.")
     void givenValidRefactoringDoneToNonExistingRefactoringTodo_whenSavingRefactoringTodo_thenThrowsException() {
         // given
-        Member member = this.signInMemberWithEmailCondition("nano@gmail.com");
-
-        String code = "String id = email;\n" +
-                "        String password = \"testpassword1234\";\n" +
-                "        String level = \"주니어\";";
-        String description = "완벽한 균형을 이루는 하나의 리팩토링 코드";
-
-        RefactoringDoneFormat format = RefactoringDoneFormat.of(
-                -1L, // 존재하지 않는 리팩토링 대상 코드
-                member,
-                code,
-                description
-        );
 
         // when && then
-        assertThatThrownBy(() -> refactoringDoneService.saveRefactoringDone(format))
+        assertThatThrownBy(() -> refactoringDoneService.saveRefactoringDone(
+                RefactoringDoneFormat.of(
+                        -1L, // 존재하지 않는 리팩토링 대상 코드
+                        this.signInMemberWithEmailCondition(TEST_GMAIL_EMAIL),
+                        TEST_CODE,
+                        TEST_DESCRIPTION
+                )))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("you tried to post a RefactoringDone of RefactoringTodo which is not existing");
     }
@@ -120,9 +131,8 @@ class RefactoringDoneServiceTest {
     @DisplayName("올바르지 않은 내용으로 리팩토링 한 코드를 등록 요청 시 예외를 던진다.")
     void givenInValidRefactoringDoneToExistingRefactoringTodo_whenSavingRefactoringTodo_thenThrowsException(RefactoringDoneFormat format, String errorCause) {
         // given
-        Member member = this.signInMemberWithEmailCondition("nano@gmail.com");
-        Long savedRefactoringTodoId = this.saveRefactoringTodoWithMemberCondition(member);
-        format.setRefactoringTodoId(savedRefactoringTodoId);
+        Member member = this.signInMemberWithEmailCondition(TEST_GMAIL_EMAIL);
+        format.setRefactoringTodoId(this.saveRefactoringTodoWithMemberCondition(member));
         format.setMember(member);
 
         // when & then
@@ -142,18 +152,18 @@ class RefactoringDoneServiceTest {
                                 null,
                                 null,
                                 makeString(11000), // 10,000자를 넘어가는 리팩토링 코드
-                                "정상적인 코드 설명"
+                                TEST_DESCRIPTION
                         ),
-                        "code"
+                        TEST_CODE
                 ),
                 Arguments.of(
                         RefactoringDoneFormat.of(
                                 null,
                                 null,
-                                "System.out.println(\"정상적인 코드\")",
+                                TEST_CODE,
                                 makeString(1100) // 1,000자를 넘어가는 리팩토링 코드 설명
                         ),
-                        "description"
+                        TEST_DESCRIPTION
                 )
         );
     }
@@ -162,22 +172,14 @@ class RefactoringDoneServiceTest {
     @DisplayName("유효한 id를 이용해 리팩토링 한 코드 한 건을 조회할 수 있다.")
     void givenValidRefactoringDoneId_whenFindOneByGivenId_thenReturnsRefactoringDone() {
         // given
-        Member member = this.signInMemberWithEmailCondition("nano@gmail.com");
-
-        String code = "String id = email;\n" +
-                "        String password = \"testpassword1234\";\n" +
-                "        String level = \"주니어\";";
-        String description = "완벽한 균형을 이루는 하나의 리팩토링 코드";
-
+        Member member = this.signInMemberWithEmailCondition(TEST_GMAIL_EMAIL);
         Long savedRefactoringTodoId = this.saveRefactoringTodoWithMemberCondition(member);
-
         RefactoringDoneFormat format = RefactoringDoneFormat.of(
                 savedRefactoringTodoId,
                 member,
-                code,
-                description
+                TEST_CODE,
+                TEST_DESCRIPTION
         );
-
         Long savedRefactoringDoneId = this.refactoringDoneService.saveRefactoringDone(format);
 
         // when
@@ -187,8 +189,8 @@ class RefactoringDoneServiceTest {
         assertThat(result.getId()).isEqualTo(savedRefactoringDoneId);
         assertThat(result.getMember()).isEqualTo(member);
         assertThat(result.getRefactoringTodoResponse().getId()).isEqualTo(savedRefactoringTodoId);
-        assertThat(result.getCode()).isEqualTo(code);
-        assertThat(result.getDescription()).isEqualTo(description);
+        assertThat(result.getCode()).isEqualTo(TEST_CODE);
+        assertThat(result.getDescription()).isEqualTo(TEST_DESCRIPTION);
     }
 
     @Test
@@ -202,9 +204,7 @@ class RefactoringDoneServiceTest {
 
     private static String makeString(int length) {
         StringBuilder stringBuilder = new StringBuilder();
-        for (int i = 0; i < length; i++) {
-            stringBuilder.append("*");
-        }
+        stringBuilder.append("*".repeat(Math.max(0, length)));
         return stringBuilder.toString();
     }
 
@@ -212,11 +212,12 @@ class RefactoringDoneServiceTest {
     @DisplayName("다른 사람이 작성한 리팩토링 한 코드 게시글에 좋아요를 등록할 수 있다.")
     void givenMemberAndRefactoringDoneWrittenByAnother_whenPostingLike_thenSuccess() {
         // given
-        Member nanoMember = this.signInMemberWithEmailCondition("nano@gmail.com");
-        Member baboMember = this.signInMemberWithEmailCondition("babo@gmail.com");
-        Long savedRefactoringTodoByNano = this.saveRefactoringTodoWithMemberCondition(nanoMember);
+        Member nanoMember = this.signInMemberWithEmailCondition(TEST_GMAIL_EMAIL);
+        Member baboMember = this.signInMemberWithEmailCondition(TEST2_GMAIL_EMAIL);
 
-        Long savedRefactoringDoneByBabo = this.saveRefactoringDoneWithMemberAndRefactoringTodoCondition(baboMember, savedRefactoringTodoByNano);
+        Long savedRefactoringTodoByNano = this.saveRefactoringTodoWithMemberCondition(nanoMember);
+        Long savedRefactoringDoneByBabo
+                = this.saveRefactoringDoneWithMemberAndRefactoringTodoCondition(baboMember, savedRefactoringTodoByNano);
 
         // when
         this.refactoringDoneService.assignLike(nanoMember, savedRefactoringDoneByBabo);
@@ -237,8 +238,8 @@ class RefactoringDoneServiceTest {
     @DisplayName("내가 작성한 리팩토링 한 코드 게시글을 좋아요할 수 없다.")
     void givenMemberAndRefactoringDoneWrittenByMe_whenPostingLike_thenThrowsException() {
         // given
-        Member nanoMember = this.signInMemberWithEmailCondition("nano@gmail.com");
-        Member baboMember = this.signInMemberWithEmailCondition("babo@gmail.com");
+        Member nanoMember = this.signInMemberWithEmailCondition(TEST_GMAIL_EMAIL);
+        Member baboMember = this.signInMemberWithEmailCondition(TEST2_GMAIL_EMAIL);
         Long savedRefactoringTodoByNano = this.saveRefactoringTodoWithMemberCondition(nanoMember);
 
         Long savedRefactoringDoneByBabo = this.saveRefactoringDoneWithMemberAndRefactoringTodoCondition(baboMember, savedRefactoringTodoByNano);
@@ -254,8 +255,8 @@ class RefactoringDoneServiceTest {
     @DisplayName("이미 좋아요 누른 게시글을 또 좋아요 요청할 수 없다.")
     void givenMemberAndRefactoringDoneAlreadyLiked_whenPostingLike_thenThrowsException() {
         // given
-        Member nanoMember = this.signInMemberWithEmailCondition("nano@gmail.com");
-        Member baboMember = this.signInMemberWithEmailCondition("babo@gmail.com");
+        Member nanoMember = this.signInMemberWithEmailCondition(TEST_GMAIL_EMAIL);
+        Member baboMember = this.signInMemberWithEmailCondition(TEST2_GMAIL_EMAIL);
         Long savedRefactoringTodoByNano = this.saveRefactoringTodoWithMemberCondition(nanoMember);
 
         Long savedRefactoringDoneByBabo = this.saveRefactoringDoneWithMemberAndRefactoringTodoCondition(baboMember, savedRefactoringTodoByNano);
@@ -272,8 +273,8 @@ class RefactoringDoneServiceTest {
     @DisplayName("리팩토링 한 코드에 달린 좋아요를 삭제할 수 있다.")
     void givenRefactoringDoneId_whenDeletingLike_thenSuccess() {
         // given
-        Member nanoMember = this.signInMemberWithEmailCondition("nano@gmail.com");
-        Member baboMember = this.signInMemberWithEmailCondition("babo@gmail.com");
+        Member nanoMember = this.signInMemberWithEmailCondition(TEST_GMAIL_EMAIL);
+        Member baboMember = this.signInMemberWithEmailCondition(TEST2_GMAIL_EMAIL);
         Long savedRefactoringTodoByNano = this.saveRefactoringTodoWithMemberCondition(nanoMember);
 
         Long savedRefactoringDoneByBabo = this.saveRefactoringDoneWithMemberAndRefactoringTodoCondition(baboMember, savedRefactoringTodoByNano);
@@ -294,8 +295,8 @@ class RefactoringDoneServiceTest {
     @DisplayName("좋아요를 등록한 적 없는 게시글에 대해 좋아요를 삭제할 수 없다.")
     void givenRefactoringDoneIdThatNeverLiked_whenDeletingLike_thenThrowsException() {
         // given
-        Member nanoMember = this.signInMemberWithEmailCondition("nano@gmail.com");
-        Member baboMember = this.signInMemberWithEmailCondition("babo@gmail.com");
+        Member nanoMember = this.signInMemberWithEmailCondition(TEST_GMAIL_EMAIL);
+        Member baboMember = this.signInMemberWithEmailCondition(TEST2_GMAIL_EMAIL);
         Long savedRefactoringTodoByNano = this.saveRefactoringTodoWithMemberCondition(nanoMember);
 
         Long savedRefactoringDoneByBabo = this.saveRefactoringDoneWithMemberAndRefactoringTodoCondition(baboMember, savedRefactoringTodoByNano);
@@ -311,58 +312,34 @@ class RefactoringDoneServiceTest {
     }
 
     private Long saveRefactoringDoneWithMemberAndRefactoringTodoCondition(Member member, Long refactoringTodoId) {
-        String code = "String id = email;\n" +
-                "        String password = \"testpassword1234\";\n" +
-                "        String level = \"주니어\";";
-        String description = "완벽한 균형을 이루는 하나의 리팩토링 코드";
-
         RefactoringDoneFormat format = RefactoringDoneFormat.of(
                 refactoringTodoId,
                 member,
-                code,
-                description
+                TEST_CODE,
+                TEST_DESCRIPTION
         );
 
         return this.refactoringDoneService.saveRefactoringDone(format);
     }
 
     private Member signInMemberWithEmailCondition(String email) {
-        String id = email;
-        String password = "testpassword1234";
-        String level = "주니어";
+        CareerFormat career1 = new CareerFormat(SAMSUNG_POOP_TEAM, 30);
+        CareerFormat career2 = new CareerFormat(NAVER_NUCLEAR_TEAM, 4);
 
-        CareerFormat career1 = new CareerFormat("삼성전자 응가부서", 30);
-        CareerFormat career2 = new CareerFormat("네이버 핵폭탄부서", 4);
-
-        MemberSignInFormat signInFormat = MemberSignInFormat.of(id, password, level, List.of(career1, career2));
-
+        MemberSignInFormat signInFormat = MemberSignInFormat.of(email, TEST_PASSWORD, JUNIOR, List.of(career1, career2));
         memberService.signIn(signInFormat);
 
-        return memberRepository.findById(id).get();
+        return memberRepository.findById(email).get();
     }
 
     private Long saveRefactoringTodoWithMemberCondition(Member member) {
-        String language = "JAVA";
-        String code = "    private String signInMember() {\n" +
-                "        String email = \"test@gmail.com\";\n" +
-                "        String password = \"testpassword1234\";\n" +
-                "        String level = \"주니어\";\n" +
-                "\n" +
-                "        CareerFormat career1 = new CareerFormat(\"삼성전자 응가부서\", 30);\n" +
-                "        CareerFormat career2 = new CareerFormat(\"네이버 핵폭탄부서\", 4);\n" +
-                "\n" +
-                "        MemberSignInFormat signInFormat = MemberSignInFormat.of(email, password, level, List.of(career1, career2));\n" +
-                "\n" +
-                "        memberService.signIn(signInFormat);\n" +
-                "\n" +
-                "        return email;\n" +
-                "    }";
-        String description = "유효한 새 게시글이 제공되면 글이 정상적으로 등록된다.";
-        RefactoringTodoOrderFormat todoOrderFormat1 = RefactoringTodoOrderFormat.of("메소드 중복을 없애 주십시오.");
-        RefactoringTodoOrderFormat todoOrderFormat2 = RefactoringTodoOrderFormat.of("개 소리 좀 안 나게 해라!!!!");
-
-        RefactoringTodoFormat format = RefactoringTodoFormat.of(member, language, code, description, List.of(todoOrderFormat1, todoOrderFormat2));
-
+        RefactoringTodoFormat format = RefactoringTodoFormat.of(
+                member, TEST_LANGUAGE, TEST_CODE, TEST_DESCRIPTION,
+                List.of(
+                        RefactoringTodoOrderFormat.of("메소드 중복을 없애 주십시오."),
+                        RefactoringTodoOrderFormat.of("개 소리 좀 안 나게 해라!!!!")
+                )
+        );
         Long savedId = refactoringTodoService.saveRefactoringTodo(format);
 
         em.flush();

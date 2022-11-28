@@ -33,8 +33,7 @@ public class MemberService {
             throw new IllegalArgumentException(String.format(MEMBER_ALREADY_EXISTS_WITH_THIS_EMAIL_MESSAGE_FORMAT, signInFormat.getEmail()));
         } // TODO: insert문에서 어차피 id 중복여부를 확인할 텐데 select문을 굳이 쏴 id 중복 여부를 확인하고 있다.
 
-        Member member = MemberSignInFormat.toEntity(signInFormat);
-        Member savedMember = memberRepository.save(member);
+        Member savedMember = memberRepository.save(MemberSignInFormat.toEntity(signInFormat));
         log.info(SIGNING_IN_COMPLETED_LOG_FORMAT, savedMember.getId());
     }
 

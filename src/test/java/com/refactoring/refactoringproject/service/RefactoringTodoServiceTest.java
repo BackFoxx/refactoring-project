@@ -6,6 +6,7 @@ import com.refactoring.refactoringproject.entity.RefactoringTodo;
 import com.refactoring.refactoringproject.entity.RefactoringTodoOrder;
 import com.refactoring.refactoringproject.repository.MemberRepository;
 import com.refactoring.refactoringproject.repository.RefactoringTodoRepository;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,6 +39,30 @@ import static org.assertj.core.api.Assertions.*;
 @SpringBootTest
 @Transactional
 class RefactoringTodoServiceTest {
+    public static final String TEST_GMAIL_EMAIL = "test@gmail.com";
+    public static final String TEST_PASSWORD = "testpassword1234";
+    public static final String JUNIOR = "주니어";
+    public static final String SAMSUNG_POOP_TEAM = "삼성전자 응가부서";
+    public static final String NAVER_NUCLEAR_TEAM = "네이버 핵폭탄부서";
+    public static final String TEST2_GMAIL_EMAIL = "test2@gmail.com";
+    public static final String TEST_TODO_ORDER = "메소드 중복을 없애 주십시오.";
+    public static final String TEST_TODO_ORDER_2 = "개 소리 좀 안 나게 해라!!!!";
+    public static final String TEST_DESCRIPTION = "유효한 새 게시글이 제공되면 글이 정상적으로 등록된다.";
+    public static final String TEST_CODE = "    private String signInMember() {\n" +
+            "        String email = \"test@gmail.com\";\n" +
+            "        String password = \"testpassword1234\";\n" +
+            "        String level = \"주니어\";\n" +
+            "\n" +
+            "        CareerFormat career1 = new CareerFormat(\"삼성전자 응가부서\", 30);\n" +
+            "        CareerFormat career2 = new CareerFormat(\"네이버 핵폭탄부서\", 4);\n" +
+            "\n" +
+            "        MemberSignInFormat signInFormat = MemberSignInFormat.of(email, password, level, List.of(career1, career2));\n" +
+            "\n" +
+            "        memberService.signIn(signInFormat);\n" +
+            "\n" +
+            "        return email;\n" +
+            "    }";
+    public static final String TEST_LANGUAGE = "JAVA";
     @PersistenceContext
     EntityManager em;
 
@@ -59,26 +84,10 @@ class RefactoringTodoServiceTest {
         // given
         Member member = this.signInMember();
 
-        String language = "JAVA";
-        String code = "    private String signInMember() {\n" +
-                "        String email = \"test@gmail.com\";\n" +
-                "        String password = \"testpassword1234\";\n" +
-                "        String level = \"주니어\";\n" +
-                "\n" +
-                "        CareerFormat career1 = new CareerFormat(\"삼성전자 응가부서\", 30);\n" +
-                "        CareerFormat career2 = new CareerFormat(\"네이버 핵폭탄부서\", 4);\n" +
-                "\n" +
-                "        MemberSignInFormat signInFormat = MemberSignInFormat.of(email, password, level, List.of(career1, career2));\n" +
-                "\n" +
-                "        memberService.signIn(signInFormat);\n" +
-                "\n" +
-                "        return email;\n" +
-                "    }";
-        String description = "유효한 새 게시글이 제공되면 글이 정상적으로 등록된다.";
-        RefactoringTodoOrderFormat todoOrderFormat1 = RefactoringTodoOrderFormat.of("메소드 중복을 없애 주십시오.");
-        RefactoringTodoOrderFormat todoOrderFormat2 = RefactoringTodoOrderFormat.of("개 소리 좀 안 나게 해라!!!!");
+        RefactoringTodoOrderFormat todoOrderFormat1 = RefactoringTodoOrderFormat.of(TEST_TODO_ORDER);
+        RefactoringTodoOrderFormat todoOrderFormat2 = RefactoringTodoOrderFormat.of(TEST_TODO_ORDER_2);
 
-        RefactoringTodoFormat format = RefactoringTodoFormat.of(member, language, code, description, List.of(todoOrderFormat1, todoOrderFormat2));
+        RefactoringTodoFormat format = RefactoringTodoFormat.of(member, TEST_LANGUAGE, TEST_CODE, TEST_DESCRIPTION, List.of(todoOrderFormat1, todoOrderFormat2));
 
         // when
         Long savedId = refactoringTodoService.saveRefactoringTodo(format);
@@ -89,17 +98,16 @@ class RefactoringTodoServiceTest {
         // then
         Optional<RefactoringTodo> resultOptional = refactoringTodoRepository.findById(savedId);
 
-        if (!resultOptional.isPresent()) fail("Id에 해당하는 RefactoringTodo가 조회되어야 한다.");
-        RefactoringTodo result = resultOptional.get();
+        RefactoringTodo result = resultOptional.orElseThrow(AssertionError::new);
 
         assertThat(result.getMember())
                 .extracting(Member::getId).isEqualTo(member.getId());
-        assertThat(result.getLanguage()).isEqualTo(language);
-        assertThat(result.getCode()).isEqualTo(code);
-        assertThat(result.getDescription()).isEqualTo(description);
+        assertThat(result.getLanguage()).isEqualTo(TEST_LANGUAGE);
+        assertThat(result.getCode()).isEqualTo(TEST_CODE);
+        assertThat(result.getDescription()).isEqualTo(TEST_DESCRIPTION);
         assertThat(result.getOrders())
                 .extracting(RefactoringTodoOrder::getContent)
-                .containsExactly("메소드 중복을 없애 주십시오.", "개 소리 좀 안 나게 해라!!!!");
+                .containsExactly(TEST_TODO_ORDER, TEST_TODO_ORDER_2);
     }
 
     @Test
@@ -113,29 +121,14 @@ class RefactoringTodoServiceTest {
 
         // then
         assertThat(response.getId()).isEqualTo(savedId);
-        assertThat(response.getMember().getId()).isEqualTo("test@gmail.com");
-        assertThat(response.getLanguage()).isEqualTo("JAVA");
-        assertThat(response.getCode()).isEqualTo(
-                "    private String signInMember() {\n" +
-                        "        String email = \"test@gmail.com\";\n" +
-                        "        String password = \"testpassword1234\";\n" +
-                        "        String level = \"주니어\";\n" +
-                        "\n" +
-                        "        CareerFormat career1 = new CareerFormat(\"삼성전자 응가부서\", 30);\n" +
-                        "        CareerFormat career2 = new CareerFormat(\"네이버 핵폭탄부서\", 4);\n" +
-                        "\n" +
-                        "        MemberSignInFormat signInFormat = MemberSignInFormat.of(email, password, level, List.of(career1, career2));\n" +
-                        "\n" +
-                        "        memberService.signIn(signInFormat);\n" +
-                        "\n" +
-                        "        return email;\n" +
-                        "    }"
-        );
-        assertThat(response.getDescription()).isEqualTo("유효한 새 게시글이 제공되면 글이 정상적으로 등록된다.");
+        assertThat(response.getMember().getId()).isEqualTo(TEST2_GMAIL_EMAIL);
+        assertThat(response.getLanguage()).isEqualTo(TEST_LANGUAGE);
+        assertThat(response.getCode()).isEqualTo(TEST_CODE);
+        assertThat(response.getDescription()).isEqualTo(TEST_DESCRIPTION);
         assertThat(response.getBestPractice()).isNull(); // TODO: BestPractice 구현 후 추가
         assertThat(response.getOrders())
                 .extracting(RefactoringTodoOrderResponse::getContent)
-                .containsExactly("메소드 중복을 없애 주십시오.", "개 소리 좀 안 나게 해라!!!!");
+                .containsExactly(TEST_TODO_ORDER, TEST_TODO_ORDER_2);
     }
 
     @Test
